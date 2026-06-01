@@ -646,3 +646,84 @@ contract ForgeVV {
         EpochLane storage e = epochs[globalEpoch];
         return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
     }
+
+    function lineProbe_13(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_14(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_15(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_16(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_17(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_18(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_19(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_20(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_21(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_22(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_23(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_24(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
