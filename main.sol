@@ -322,3 +322,84 @@ contract ForgeVV {
     function fundPodAmount(uint256 podId, uint256 tierId, uint256 amt) external nonReentrant whenLanesOpen {
         if (amt == 0) revert FVV_ZeroAmt();
         _moveFloatToPod(msg.sender, podId, tierId, amt);
+    }
+
+    function registerFrame(bytes32 modelTag) external whenLanesOpen {
+        frameOf[msg.sender] = AiFrame({
+            modelTag: modelTag,
+            lastScore: 0,
+            scoredAt: 0,
+            biasBps: 0
+        });
+    }
+
+    function pokeFrame() external whenLanesOpen {
+        AiFrame storage f = frameOf[msg.sender];
+        if (f.modelTag == bytes32(0)) revert FVV_FrameStale();
+        int256 score = _syntheticScore(msg.sender, f.modelTag);
+        uint256 bias = ForgeMath.clampBps(uint256(int256(500) + score), 50, 350);
+        f.lastScore = score;
+        f.biasBps = bias;
+        f.scoredAt = uint64(block.timestamp);
+        uint256 frameId = uint256(keccak256(abi.encode(msg.sender, f.scoredAt)));
+        emit Scored(msg.sender, frameId, score, f.modelTag);
+        _accruePods(msg.sender);
+    }
+
+    function requestWithdraw(uint256 amt, address to) external nonReentrant whenLanesOpen {
+        if (to == address(0)) revert FVV_ZeroAddr();
+        if (amt == 0) revert FVV_ZeroAmt();
+        FloatLedger storage fl = floatOf[msg.sender];
+        if (fl.liquidWei < amt) revert FVV_BalanceLow();
+        bytes32 ticket = keccak256(abi.encode(msg.sender, amt, block.number, lineNonce++));
+        if (withdrawOf[msg.sender][ticket].state != QueueState.None) revert FVV_QueueBusy(ticket);
+        uint64 ready = uint64(block.timestamp + FVV_WITHDRAW_DELAY);
+        fl.liquidWei -= amt;
+        withdrawOf[msg.sender][ticket] = WithdrawCell({to: to, amountWei: amt, readyAt: ready, state: QueueState.Waiting});
+        emit Queued(msg.sender, to, amt, ready, ticket);
+    }
+
+    function cancelWithdraw(bytes32 ticket) external nonReentrant {
+        WithdrawCell storage c = withdrawOf[msg.sender][ticket];
+        if (c.state != QueueState.Waiting) revert FVV_QueueEmpty();
+        uint256 amt = c.amountWei;
+        c.state = QueueState.None;
+        floatOf[msg.sender].liquidWei += amt;
+        emit Cancelled(msg.sender, ticket, amt);
+    }
+
+    function claimWithdraw(bytes32 ticket) external nonReentrant {
+        WithdrawCell storage c = withdrawOf[msg.sender][ticket];
+        if (c.state != QueueState.Waiting) revert FVV_QueueEmpty();
+        if (block.timestamp < c.readyAt) revert FVV_NotReady(c.readyAt);
+        uint256 amt = c.amountWei;
+        c.state = QueueState.Done;
+        if (address(this).balance < amt) revert FVV_BalanceLow();
+        totalHeldWei -= amt;
+        (bool ok,) = c.to.call{value: amt}("");
+        if (!ok) revert FVV_TransferFail();
+        emit Claimed(msg.sender, amt, ticket);
+    }
+
+    function defineSchedule(uint256 podId, uint256 sliceWei, uint64 everySeconds, uint64 endAt)
+        external
+        whenLanesOpen
+    {
+        if (sliceWei < FVV_MIN_FLOAT) revert FVV_BelowMin();
+        if (everySeconds < 3_600) revert FVV_BadBps();
+        SavingsPod storage p = podsOf[msg.sender][podId];
+        if (p.phase != PodPhase.Live) revert FVV_PodMissing();
+        scheduleOf[msg.sender] = AutoSchedule({
+            sliceWei: sliceWei,
+            everySeconds: everySeconds,
+            nextAt: uint64(block.timestamp + everySeconds),
+            endAt: endAt,
+            targetPodId: podId,
+            live: true
+        });
+    }
+
+    function runSchedule(uint256 tierId) external nonReentrant whenLanesOpen {
+        AutoSchedule storage s = scheduleOf[msg.sender];
+        if (!s.live) revert FVV_ScheduleVoid();
+        if (block.timestamp < s.nextAt) revert FVV_NotReady(s.nextAt);
