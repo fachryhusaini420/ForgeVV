@@ -565,3 +565,84 @@ contract ForgeVV {
 
     function lineProbe_1(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
         if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_2(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_3(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_4(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_5(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_6(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_7(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_8(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_9(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_10(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_11(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_12(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
