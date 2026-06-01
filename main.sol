@@ -79,3 +79,84 @@ contract ForgeVV {
     error FVV_Fault_24();
     error FVV_Fault_25();
     error FVV_Fault_26();
+    error FVV_Fault_27();
+    error FVV_Fault_28();
+    error FVV_Fault_29();
+    error FVV_Fault_30();
+    error FVV_Fault_31();
+    error FVV_Fault_32();
+    error FVV_Fault_33();
+    error FVV_Fault_34();
+    error FVV_Fault_35();
+    error FVV_Fault_36();
+    error FVV_Fault_37();
+    error FVV_Fault_38();
+    error FVV_Fault_39();
+    error FVV_Fault_40();
+    error FVV_Fault_41();
+    error FVV_Fault_42();
+    error FVV_Fault_43();
+
+    event Opened(address indexed saver, uint256 indexed podId, uint256 weiAmt);
+    event Topped(address indexed saver, uint256 indexed podId, uint256 weiAmt);
+    event Moved(address indexed saver, uint256 fromFloat, uint256 toPod);
+    event Claimed(address indexed saver, uint256 weiAmt, bytes32 ticket);
+    event Queued(address indexed saver, address indexed to, uint256 weiAmt, uint64 readyAt, bytes32 ticket);
+    event Cancelled(address indexed saver, bytes32 ticket, uint256 refunded);
+    event Scored(address indexed saver, uint256 frameId, int256 score, bytes32 modelTag);
+    event Shifted(uint256 indexed epochId, uint64 wall, uint256 pooled);
+    event Paused(bool lanePaused);
+    event Proposed(address indexed prev, address indexed next);
+    event Accepted(address indexed governor);
+    event Tuned(uint256 tierId, uint256 accrualBps, uint256 minWei);
+    event Tick_0(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_1(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_2(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_3(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_4(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_5(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_6(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_7(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_8(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_9(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+    event Tick_10(uint256 indexed lineId, address indexed actor, uint256 weiAmt);
+
+    enum PodPhase { Void, Live, Sealed }
+    enum QueueState { None, Waiting, Done }
+
+    struct SavingsPod {
+        uint256 principalWei;
+        uint256 rewardAccruedWei;
+        uint256 goalWei;
+        uint64 unlockAt;
+        uint64 openedAt;
+        uint32 epochJoined;
+        PodPhase phase;
+        bytes32 labelHash;
+    }
+
+    struct FloatLedger {
+        uint256 liquidWei;
+        uint256 lifetimeInWei;
+        uint256 lifetimeOutWei;
+        uint64 lastPulse;
+    }
+
+    struct AiFrame {
+        bytes32 modelTag;
+        int256 lastScore;
+        uint64 scoredAt;
+        uint256 biasBps;
+    }
+
+    struct WithdrawCell {
+        address to;
+        uint256 amountWei;
+        uint64 readyAt;
+        QueueState state;
+    }
+
+    struct EpochLane {
+        uint64 startedAt;
+        uint256 weightSum;
+        uint256 distributedWei;
