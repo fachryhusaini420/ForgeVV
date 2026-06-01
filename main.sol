@@ -241,3 +241,84 @@ contract ForgeVV {
         ADDRESS_B = 0xD37f5630B994Bb186e955A7Da9Cbe7Fe7257AA86;
         ADDRESS_C = 0x7f6bCb0D5a138E0503A55d4C485D779f66981DB5;
         governor = msg.sender;
+        _guard = 1;
+        globalEpoch = 1;
+        _seedEpoch(1);
+        _bootstrapTiers();
+    }
+
+    function proposeGovernor(address next) external onlyGovernor {
+        if (next == address(0)) revert FVV_BadHandoff();
+        pendingGovernor = next;
+        emit Proposed(governor, next);
+    }
+
+    function acceptGovernor() external {
+        if (msg.sender != pendingGovernor) revert FVV_BadHandoff();
+        governor = pendingGovernor;
+        pendingGovernor = address(0);
+        emit Accepted(governor);
+    }
+
+    function setLanePaused(bool v) external onlyGovernor {
+        lanePaused = v;
+        emit Paused(v);
+    }
+
+    function tuneTier(uint256 tierId, uint256 accrualBps, uint256 minWei) external onlyGovernor {
+        TierLine storage t = tiers[tierId];
+        if (!t.accepting && accrualBps == 0) revert FVV_PodMissing();
+        if (accrualBps > FVV_MAX_ACCRUAL_BPS) revert FVV_BadBps();
+        t.accrualBps = accrualBps;
+        t.minDepositWei = minWei;
+        emit Tuned(tierId, accrualBps, minWei);
+    }
+
+    /// @notice Fund on-chain reward pool (payable). Accrual draws only from this pool.
+    function seedRewardPool() external payable onlyGovernor {
+        if (msg.value == 0) revert FVV_ZeroAmt();
+        rewardPoolWei += msg.value;
+        totalHeldWei += msg.value;
+    }
+
+    function advanceEpoch() external onlyGovernor whenLanesOpen {
+        uint256 n = globalEpoch + 1;
+        if (n > 40) revert FVV_BadEpoch();
+        globalEpoch = n;
+        _seedEpoch(n);
+        emit Shifted(n, uint64(block.timestamp), totalHeldWei);
+    }
+
+    /// @notice Credit liquid float (payable). No anonymous receive path.
+    function creditFloat() external payable nonReentrant whenLanesOpen {
+        if (msg.value == 0) revert FVV_ZeroAmt();
+        _creditFloat(msg.sender, msg.value, true);
+    }
+
+    function openPod(uint256 tierId, uint256 goalWei, bytes32 labelHash) external whenLanesOpen {
+        TierLine storage t = tiers[tierId];
+        if (!t.accepting) revert FVV_PodMissing();
+        uint256 id = podCountOf[msg.sender];
+        podCountOf[msg.sender] = id + 1;
+        podsOf[msg.sender][id] = SavingsPod({
+            principalWei: 0,
+            rewardAccruedWei: 0,
+            goalWei: goalWei,
+            unlockAt: 0,
+            openedAt: uint64(block.timestamp),
+            epochJoined: uint32(globalEpoch),
+            phase: PodPhase.Live,
+            labelHash: labelHash
+        });
+        emit Opened(msg.sender, id, 0);
+    }
+
+    function fundPod(uint256 podId, uint256 tierId) external nonReentrant whenLanesOpen {
+        uint256 amt = floatOf[msg.sender].liquidWei;
+        if (amt == 0) revert FVV_ZeroAmt();
+        _moveFloatToPod(msg.sender, podId, tierId, amt);
+    }
+
+    function fundPodAmount(uint256 podId, uint256 tierId, uint256 amt) external nonReentrant whenLanesOpen {
+        if (amt == 0) revert FVV_ZeroAmt();
+        _moveFloatToPod(msg.sender, podId, tierId, amt);
