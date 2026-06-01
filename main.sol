@@ -484,3 +484,84 @@ contract ForgeVV {
     function _syntheticScore(address saver, bytes32 modelTag) internal view returns (int256) {
         bytes32 h = keccak256(abi.encode(saver, modelTag, block.prevrandao, globalEpoch));
         uint256 u = uint256(h) % 1_000;
+        return int256(u) - 500;
+    }
+
+    function _seedEpoch(uint256 epochId) internal {
+        bytes32 ha = keccak256(abi.encode(_MIX_0, epochId, ADDRESS_A));
+        bytes32 hb = keccak256(abi.encode(_MIX_1, epochId, ADDRESS_B));
+        epochs[epochId] = EpochLane({
+            startedAt: uint64(block.timestamp),
+            weightSum: 0,
+            distributedWei: 0,
+            mixHA: ha,
+            mixHB: hb
+        });
+    }
+
+    function _bootstrapTiers() internal {
+        for (uint256 i = 1; i <= 15; ++i) {
+            uint256 bps = 120 + (i * 37);
+            if (bps > FVV_MAX_ACCRUAL_BPS) bps = FVV_MAX_ACCRUAL_BPS;
+            tiers[i] = TierLine({
+                accrualBps: bps,
+                minDepositWei: FVV_MIN_FLOAT,
+                maxDepositWei: 120 ether,
+                capWei: 9_000 ether,
+                accepting: true
+            });
+        }
+    }
+
+    function laneDigestHA(address saver, uint256 podId) public view returns (bytes32) {
+        SavingsPod storage p = podsOf[saver][podId];
+        return keccak256(abi.encode(p.principalWei, p.rewardAccruedWei, p.epochJoined, _MIX_2));
+    }
+
+    function laneDigestHB(address saver, uint256 podId) public view returns (bytes32) {
+        SavingsPod storage p = podsOf[saver][podId];
+        return keccak256(abi.encode(p.labelHash, p.goalWei, p.unlockAt, _MIX_3));
+    }
+
+    function laneDigest(address saver, uint256 podId) external view returns (bytes32) {
+        return keccak256(abi.encodePacked(laneDigestHA(saver, podId), laneDigestHB(saver, podId)));
+    }
+
+    function consumeDigest(bytes32 digest) external {
+        if (digestUsed[digest]) revert FVV_DigestMismatch();
+        digestUsed[digest] = true;
+    }
+
+    function snapshotFloat(address saver)
+        external
+        view
+        returns (uint256 liquid, uint256 lifetimeIn, uint256 lifetimeOut, uint64 pulse)
+    {
+        FloatLedger storage fl = floatOf[saver];
+        return (fl.liquidWei, fl.lifetimeInWei, fl.lifetimeOutWei, fl.lastPulse);
+    }
+
+    function snapshotPod(address saver, uint256 podId)
+        external
+        view
+        returns (
+            uint256 principal,
+            uint256 reward,
+            uint256 goal,
+            uint64 unlockAt,
+            PodPhase phase
+        )
+    {
+        SavingsPod storage p = podsOf[saver][podId];
+        return (p.principalWei, p.rewardAccruedWei, p.goalWei, p.unlockAt, p.phase);
+    }
+
+    function lineProbe_0(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
+        uint256 wgt = lineWeight[lineId % 32];
+        EpochLane storage e = epochs[globalEpoch];
+        return (wgt, uint256(keccak256(abi.encodePacked(e.mixHA, e.mixHB, lineId))));
+    }
+
+    function lineProbe_1(uint256 lineId) external view returns (uint256 w, uint256 epochMix) {
+        if (lineId == 0) revert FVV_LineRetired();
