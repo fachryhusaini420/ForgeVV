@@ -403,3 +403,84 @@ contract ForgeVV {
         AutoSchedule storage s = scheduleOf[msg.sender];
         if (!s.live) revert FVV_ScheduleVoid();
         if (block.timestamp < s.nextAt) revert FVV_NotReady(s.nextAt);
+        if (s.endAt != 0 && block.timestamp > s.endAt) {
+            s.live = false;
+            revert FVV_ScheduleVoid();
+        }
+        uint256 amt = ForgeMath.min(s.sliceWei, floatOf[msg.sender].liquidWei);
+        if (amt == 0) revert FVV_ZeroAmt();
+        _moveFloatToPod(msg.sender, s.targetPodId, tierId, amt);
+        s.nextAt = uint64(block.timestamp + s.everySeconds);
+    }
+
+    function pullPodToFloat(uint256 podId) external nonReentrant whenLanesOpen {
+        SavingsPod storage p = podsOf[msg.sender][podId];
+        if (p.phase != PodPhase.Live) revert FVV_PodMissing();
+        if (p.unlockAt != 0 && block.timestamp < p.unlockAt) revert FVV_PodLocked(p.unlockAt);
+        uint256 total = p.principalWei + p.rewardAccruedWei;
+        if (total == 0) revert FVV_ZeroAmt();
+        if (address(this).balance < total) revert FVV_BalanceLow();
+        p.principalWei = 0;
+        p.rewardAccruedWei = 0;
+        _creditFloat(msg.sender, total, false);
+        emit Moved(msg.sender, total, podId);
+    }
+
+    function _creditFloat(address saver, uint256 amt, bool inbound) internal {
+        FloatLedger storage fl = floatOf[saver];
+        fl.liquidWei += amt;
+        if (inbound) {
+            fl.lifetimeInWei += amt;
+            totalHeldWei += amt;
+        }
+        fl.lastPulse = uint64(block.timestamp);
+    }
+
+    function _moveFloatToPod(address saver, uint256 podId, uint256 tierId, uint256 amt) internal {
+        TierLine storage t = tiers[tierId];
+        if (!t.accepting) revert FVV_PodMissing();
+        if (amt < t.minDepositWei) revert FVV_BelowMin();
+        if (t.maxDepositWei != 0 && amt > t.maxDepositWei) revert FVV_AboveMax();
+        FloatLedger storage fl = floatOf[saver];
+        if (fl.liquidWei < amt) revert FVV_BalanceLow();
+        SavingsPod storage p = podsOf[saver][podId];
+        if (p.phase != PodPhase.Live) revert FVV_PodMissing();
+        uint256 next = p.principalWei + amt;
+        if (next > FVV_MAX_POD) revert FVV_AboveMax();
+        fl.liquidWei -= amt;
+        p.principalWei = next;
+        lineWeight[podId] += amt;
+        emit Topped(saver, podId, amt);
+        _touchAccrual(saver, podId, tierId);
+    }
+
+    function _touchAccrual(address saver, uint256 podId, uint256 tierId) internal {
+        SavingsPod storage p = podsOf[saver][podId];
+        TierLine storage t = tiers[tierId];
+        uint256 bias = frameOf[saver].biasBps;
+        uint256 bps = ForgeMath.clampBps(t.accrualBps + bias, 10, FVV_MAX_ACCRUAL_BPS);
+        uint256 dt = block.timestamp - p.openedAt;
+        if (dt == 0 || p.principalWei == 0) return;
+        uint256 reward = ForgeMath.mulDivDown(p.principalWei, bps * dt, ForgeMath.YEAR * FVV_BPS);
+        if (reward > rewardPoolWei) reward = rewardPoolWei;
+        if (reward == 0) return;
+        rewardPoolWei -= reward;
+        p.rewardAccruedWei += reward;
+        totalRewardWei += reward;
+        EpochLane storage e = epochs[globalEpoch];
+        e.distributedWei += reward;
+        e.weightSum += p.principalWei;
+    }
+
+    function _accruePods(address saver) internal {
+        uint256 n = podCountOf[saver];
+        for (uint256 i; i < n; ++i) {
+            if (podsOf[saver][i].phase == PodPhase.Live) {
+                _touchAccrual(saver, i, i % TIER_COUNT + 1);
+            }
+        }
+    }
+
+    function _syntheticScore(address saver, bytes32 modelTag) internal view returns (int256) {
+        bytes32 h = keccak256(abi.encode(saver, modelTag, block.prevrandao, globalEpoch));
+        uint256 u = uint256(h) % 1_000;
