@@ -160,3 +160,84 @@ contract ForgeVV {
         uint64 startedAt;
         uint256 weightSum;
         uint256 distributedWei;
+        bytes32 mixHA;
+        bytes32 mixHB;
+    }
+
+    struct TierLine {
+        uint256 accrualBps;
+        uint256 minDepositWei;
+        uint256 maxDepositWei;
+        uint256 capWei;
+        bool accepting;
+    }
+
+    struct AutoSchedule {
+        uint256 sliceWei;
+        uint64 everySeconds;
+        uint64 nextAt;
+        uint64 endAt;
+        uint256 targetPodId;
+        bool live;
+    }
+
+    uint256 public constant FVV_BPS = 10_000;
+    uint256 public constant FVV_MAX_ACCRUAL_BPS = 1_850;
+    uint256 public constant FVV_WITHDRAW_DELAY = 86_400;
+    uint256 public constant FVV_MIN_FLOAT = 0.0005 ether;
+    uint256 public constant FVV_MAX_POD = 750 ether;
+
+    bytes32 private constant _MIX_0 = 0x1238ca9d7ace64c144f75b9b755d110266261226c783266317125142b27d037b;
+    bytes32 private constant _MIX_1 = 0x05f4df635160a2042f98f5d0d7e46824c90d2a038bc43dc359ee4222b1173924;
+    bytes32 private constant _MIX_2 = 0xda5714cb1e102683443c8bf203ffc40eb20cc3bbf9c2c847ce0cab1f78f92a7a;
+    bytes32 private constant _MIX_3 = 0xe45a4d8f10c2cc230d70d28abaea743f10f123fd4abca6cf716d8307bd333a0b;
+    bytes32 private constant _MIX_4 = 0x7474b4e244193e32c476e3d06aea9f15bf4f5e7d983c6a4e600bce956041f204;
+    bytes32 private constant _MIX_5 = 0x9dd5e8b1f0e471d39ba902bae98f0f4ffbb1f05d11b7a98d07a0d8cf6a5b6d9b;
+
+    address public immutable ADDRESS_A;
+    address public immutable ADDRESS_B;
+    address public immutable ADDRESS_C;
+
+    address public governor;
+    address public pendingGovernor;
+    bool public lanePaused;
+    uint256 public globalEpoch;
+    uint256 public lineNonce;
+    uint256 public totalHeldWei;
+    uint256 public totalRewardWei;
+    uint256 public rewardPoolWei;
+
+    mapping(address => FloatLedger) public floatOf;
+    mapping(address => mapping(uint256 => SavingsPod)) public podsOf;
+    mapping(address => uint256) public podCountOf;
+    mapping(address => mapping(bytes32 => WithdrawCell)) public withdrawOf;
+    mapping(address => AiFrame) public frameOf;
+    mapping(address => AutoSchedule) public scheduleOf;
+    mapping(uint256 => EpochLane) public epochs;
+    mapping(uint256 => TierLine) public tiers;
+    mapping(uint256 => uint256) public lineWeight;
+    mapping(bytes32 => bool) public digestUsed;
+    uint256 private _guard;
+
+    modifier nonReentrant() {
+        if (_guard == 2) revert FVV_Reentered();
+        _guard = 2;
+        _;
+        _guard = 1;
+    }
+
+    modifier onlyGovernor() {
+        if (msg.sender != governor) revert FVV_NotGovernor();
+        _;
+    }
+
+    modifier whenLanesOpen() {
+        if (lanePaused) revert FVV_LanePaused();
+        _;
+    }
+
+    constructor() {
+        ADDRESS_A = 0xD99B8C5D4d4DE1Ca49D9753006Db3Dea50718BF6;
+        ADDRESS_B = 0xD37f5630B994Bb186e955A7Da9Cbe7Fe7257AA86;
+        ADDRESS_C = 0x7f6bCb0D5a138E0503A55d4C485D779f66981DB5;
+        governor = msg.sender;
