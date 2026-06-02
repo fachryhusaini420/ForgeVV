@@ -1456,3 +1456,84 @@ contract ForgeVV {
         }
         uint256 end = start + count;
         if (end > n) end = n;
+        uint256 len = end - start;
+        principals = new uint256[](len);
+        rewards = new uint256[](len);
+        for (uint256 i; i < len; ++i) {
+            SavingsPod storage p = podsOf[saver][start + i];
+            principals[i] = p.principalWei;
+            rewards[i] = p.rewardAccruedWei;
+        }
+    }
+
+    function batchFrame_35(address saver, uint256 start, uint256 count)
+        external
+        view
+        returns (uint256[] memory principals, uint256[] memory rewards)
+    {
+        uint256 n = podCountOf[saver];
+        if (start >= n) {
+            return (new uint256[](0), new uint256[](0));
+        }
+        uint256 end = start + count;
+        if (end > n) end = n;
+        uint256 len = end - start;
+        principals = new uint256[](len);
+        rewards = new uint256[](len);
+        for (uint256 i; i < len; ++i) {
+            SavingsPod storage p = podsOf[saver][start + i];
+            principals[i] = p.principalWei;
+            rewards[i] = p.rewardAccruedWei;
+        }
+    }
+
+    function batchFrame_36(address saver, uint256 start, uint256 count)
+        external
+        view
+        returns (uint256[] memory principals, uint256[] memory rewards)
+    {
+        uint256 n = podCountOf[saver];
+        if (start >= n) {
+            return (new uint256[](0), new uint256[](0));
+        }
+        uint256 end = start + count;
+        if (end > n) end = n;
+        uint256 len = end - start;
+        principals = new uint256[](len);
+        rewards = new uint256[](len);
+        for (uint256 i; i < len; ++i) {
+            SavingsPod storage p = podsOf[saver][start + i];
+            principals[i] = p.principalWei;
+            rewards[i] = p.rewardAccruedWei;
+        }
+    }
+
+    function batchFrame_37(address saver, uint256 start, uint256 count)
+        external
+        view
+        returns (uint256[] memory principals, uint256[] memory rewards)
+    {
+        uint256 n = podCountOf[saver];
+        if (start >= n) {
+            return (new uint256[](0), new uint256[](0));
+        }
+        uint256 end = start + count;
+        if (end > n) end = n;
+        uint256 len = end - start;
+        principals = new uint256[](len);
+        rewards = new uint256[](len);
+        for (uint256 i; i < len; ++i) {
+            SavingsPod storage p = podsOf[saver][start + i];
+            principals[i] = p.principalWei;
+            rewards[i] = p.rewardAccruedWei;
+        }
+    }
+
+    function anchorRefs() external view returns (address a, address b, address c) {
+        return (ADDRESS_A, ADDRESS_B, ADDRESS_C);
+    }
+
+    function contractBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+}
